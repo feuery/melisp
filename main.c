@@ -66,21 +66,23 @@ char* substring(char* string, int index, int stopindex)
 char* get_first_sexpr(char* code)
 {
   int pointer = 0, length = strlen(code);
-  int index_of_open_brace = 0,
-    index_of_closing_brace = 0,
+  int index_of_open_brace = -1,
+    index_of_closing_brace = -1,
     braces_opened = 0;
   
 
   for(; pointer<length; pointer++)
     {
-      if(code[pointer] == '(' && index_of_open_brace == 0)
-	index_of_open_brace = pointer;
+      if(code[pointer] == '(' && index_of_open_brace == -1)
+	{
+	  index_of_open_brace = pointer;
+	}
 
-      if(code[pointer] == '(' && index_of_open_brace != 0) braces_opened++;
-      if(code[pointer] == ')' && index_of_open_brace != 0) braces_opened--;
+      if(code[pointer] == '(' && index_of_open_brace != -1) braces_opened++;
+      if(code[pointer] == ')' && index_of_open_brace != -1) braces_opened--;
       
 
-      if(code[pointer] == ')' && index_of_open_brace != 0 && braces_opened == 0)
+      if(code[pointer] == ')' && index_of_open_brace != -1 && braces_opened == 0)
 	{
 	  index_of_closing_brace = pointer;
 	  break;
