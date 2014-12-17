@@ -110,34 +110,39 @@ enum LEAVE_TYPE
 
 vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 {
-
   if(initial_sexpr.length() == 0) return vector<std::pair<LEAVE_TYPE, string>>();
 
   int len = initial_sexpr.length();
-    string sexpr = substring(initial_sexpr.c_str(), 1, len-1);
+  string sexpr = substring(initial_sexpr.c_str(), 1, len-1);
 
   vector<std::pair<LEAVE_TYPE, string>> list;
-
+  
   int pointer = 0,
     braces_open = 0;
 
   bool in_word = false;
-
-  for(int i=0; i<len; i++)
+  int i = 0;
+  // for(int i=0; i<len; i++)
+  while(i<len)
     {
       char first = sexpr[i];
       
       in_word = !(first == ' ' ||
 		  first == ')' ||
-		  first == '\n');
+		  first == '\n' ||
+		  first == '\r' ||
+		  first == '\t' );
 
       if(!in_word)
-	i++;
+	{
+	  cout<<"Not in-word, first ("<<i<<") is "<<first<<endl;
+	  i++;
+	}
       else
 	{
+	  // i = i-1<0? 0: i-1;
 	  LEAVE_TYPE type = sexpr[i] == '(' ? LIST:ATOM;
-	  
-	  cout<<"char at sexpr["<<i<<"] is "<<sexpr[i]<<endl;
+	  	  
 	  if(type == ATOM)
 	    {
 	      do
@@ -162,9 +167,11 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 	  string subst = substring(sexpr.c_str(), pointer, i);
 	  // printf("Pushing \"%s\" in-between [%d, %d]\n", subst.c_str(), pointer, i + 1);
 	  list.push_back(std::pair<LEAVE_TYPE, string>(type, subst));
+	  printf("Stopped a word at %d, substring(%d, %d) is %s\n", pointer, pointer, i, subst.c_str());
 	  pointer = i;
 
 	  in_word = false;
+
 	}
     }
 
