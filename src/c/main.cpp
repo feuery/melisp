@@ -9,6 +9,9 @@
 #include <iostream>
 
 #include <string_tools.h>
+#include <atom_node.h>
+#include <list_node.h>
+#include <string_node.h>
 
 using namespace std;
 
@@ -42,37 +45,6 @@ char* read_source(FILE* f)
   return NULL;
 }
 
-string substring(const char* string, int index, int stopindex)
-{
-  int string_len = strlen(string), new_len = stopindex - index;
-
-  if(string_len < new_len || new_len <= 0)
-    {
-      printf("Length of string (%d) in substring less than stopindex-index (%d)\n", strlen, new_len);
-      printf("Or stopindex-index <= 0 (%d)\n", new_len);
-      return NULL; 
-    }
-
-  char* toret = new char[new_len + 1];
-  if(!toret)
-    {
-      printf("Allocating new buffer in substring failed");
-      return NULL;
-    }
-
-  for(int i=0; i< new_len; i++)
-    {
-      toret[i] = string[index+i];
-    }
-
-  toret[new_len] = '\0';
-
-  std::string reallyToRet(toret);
-  delete[] toret;
-  
-  return reallyToRet;
-}
-
 string get_first_sexpr(char* code)
 {
   int pointer = 0, length = strlen(code);
@@ -102,13 +74,6 @@ string get_first_sexpr(char* code)
   return substring(code, index_of_open_brace, index_of_closing_brace + 1);
 }
 
-enum LEAVE_TYPE
-  {
-    ATOM,
-    LIST,
-    STRING
-  };
-
 void handle_errors(const char* sexpr, int i, const char* extra = NULL)
 {
   if(sexpr[i] == '\n' || sexpr[i] == '\t')
@@ -118,14 +83,14 @@ void handle_errors(const char* sexpr, int i, const char* extra = NULL)
     }
 }
 
-vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
+vector<node* > reader(string& initial_sexpr)
 {
-  if(initial_sexpr.length() == 0) return vector<std::pair<LEAVE_TYPE, string>>();
+  if(initial_sexpr.length() == 0) return vector<node*>();
 
   int len = initial_sexpr.length();
   string sexpr = substring(initial_sexpr.c_str(), 1, len-1);
 
-  vector<std::pair<LEAVE_TYPE, string>> list;
+  vector<node*> list;
   
   int pointer = 0,
     braces_open = 0;
@@ -189,7 +154,13 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 	  i++;
 	  string subst = substring(sexpr.c_str(), pointer, i);
 	  
-	  list.push_back(std::pair<LEAVE_TYPE, string>(type, subst));
+	  list.push_back(type == ATOM?
+			 (node*) new atom_node(subst.c_str()):
+			 type == STRING ?
+			 (node*) new string_node(subst.c_str()):
+			 type == LIST ?
+			 (node*) new list_node(subst.c_str()) :
+			 (node*)new string_node("\"Unknown node\""));
 	  // printf("Stopped a word at %d, substring(%d, %d) is %s\n", pointer, pointer, i, subst.c_str());
 
 	  in_word = false;
@@ -202,15 +173,13 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
   return list;
 }
 
-string to_string(vector<pair<LEAVE_TYPE, string>>& vec)
+string to_string(vector<node*>& vec)
 {
   string buffer;
   for(unsigned int i=0; i<vec.size(); i++)
     {
-      LEAVE_TYPE type = vec.at(i).first;
-      buffer += (type == ATOM? "Atom: ":
-		 type == LIST? "List: ": "String: ");
-      buffer += vec.at(i).second;
+      LEAVE_TYPE type = vec.at(i)->type();
+      buffer += vec.at(i)->eval();
       buffer += "\n";
     }
 
@@ -225,9 +194,11 @@ int main(int argc, char** argv)
 
   string first_sexpr = get_first_sexpr(source);
 
-  vector<pair<LEAVE_TYPE, string>> ast = reader(first_sexpr);
+  vector<node*> ast = reader(first_sexpr);
   
   printf(to_string(ast).c_str());
+
+  for(node* nd: ast) delete nd;
 
   delete[] source;
   fclose(f);
