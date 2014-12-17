@@ -105,8 +105,18 @@ string get_first_sexpr(char* code)
 enum LEAVE_TYPE
   {
     ATOM,
-    LIST
+    LIST,
+    STRING
   };
+
+void handle_errors(const char* sexpr, int i, const char* extra = NULL)
+{
+  if(sexpr[i] == '\n' || sexpr[i] == '\t')
+    {
+      printf("You have invalid chars at %d\n", i);
+      if(extra != NULL) printf("%s\n", extra);
+    }
+}
 
 vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 {
@@ -122,7 +132,7 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 
   bool in_word = false;
   int i = 0;
-  // for(int i=0; i<len; i++)
+
   while(i<len)
     {
       char first = sexpr[i];
@@ -135,27 +145,40 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 
       if(!in_word)
 	{
-	  cout<<"Not in-word, first ("<<i<<") is "<<first<<endl;
 	  i++;
 	}
       else
 	{
-	  // i = i-1<0? 0: i-1;
-	  LEAVE_TYPE type = sexpr[i] == '(' ? LIST:ATOM;
+	  pointer = i;
+	  LEAVE_TYPE type = sexpr[i] == '(' ? LIST:
+	    sexpr[i]=='"'?STRING:ATOM;
 	  	  
 	  if(type == ATOM)
 	    {
 	      do
 		{
+		  handle_errors(sexpr.c_str(), i, "calling at ATOM branch");
 		  i++;
 		  if(i>=len) goto end;
+
+		  if(sexpr[i] == '\n' || sexpr[i] == '\t') printf("You have invalid chars at %d\n", i);
 		} while(sexpr[i] != ' ');
+	    }
+	  else if(type == STRING)
+	    {
+	      do
+		{
+		  handle_errors(sexpr.c_str(), i, "Calling at STRING_branch");
+		  i++;
+		  if(sexpr[i] == '\\' && sexpr[i+1] == '"') i++;
+		} while(sexpr[i] != '"');
 	    }
 	  else
 	    {
 	      braces_open++;
 	      do
 		{
+		  handle_errors(sexpr.c_str(), i, "calling at LIST branch");
 		  i++;
 		  if(i>=len) goto end;
 
@@ -165,10 +188,9 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 	    }
 	  i++;
 	  string subst = substring(sexpr.c_str(), pointer, i);
-	  // printf("Pushing \"%s\" in-between [%d, %d]\n", subst.c_str(), pointer, i + 1);
+	  
 	  list.push_back(std::pair<LEAVE_TYPE, string>(type, subst));
-	  printf("Stopped a word at %d, substring(%d, %d) is %s\n", pointer, pointer, i, subst.c_str());
-	  pointer = i;
+	  // printf("Stopped a word at %d, substring(%d, %d) is %s\n", pointer, pointer, i, subst.c_str());
 
 	  in_word = false;
 
@@ -185,7 +207,9 @@ string to_string(vector<pair<LEAVE_TYPE, string>>& vec)
   string buffer;
   for(unsigned int i=0; i<vec.size(); i++)
     {
-      buffer += (vec.at(i).first == ATOM? "Atom: ": "List: ");
+      LEAVE_TYPE type = vec.at(i).first;
+      buffer += (type == ATOM? "Atom: ":
+		 type == LIST? "List: ": "String: ");
       buffer += vec.at(i).second;
       buffer += "\n";
     }
