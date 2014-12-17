@@ -6,6 +6,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <vector>
+#include <iostream>
 
 #include <string_tools.h>
 
@@ -124,14 +125,19 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 
   for(int i=0; i<len; i++)
     {
-      if(sexpr[i] != ' ') in_word = true;
+      char first = sexpr[i];
+      
+      in_word = !(first == ' ' ||
+		  first == ')' ||
+		  first == '\n');
 
       if(!in_word)
 	i++;
       else
 	{
 	  LEAVE_TYPE type = sexpr[i] == '(' ? LIST:ATOM;
-
+	  
+	  cout<<"char at sexpr["<<i<<"] is "<<sexpr[i]<<endl;
 	  if(type == ATOM)
 	    {
 	      do
@@ -152,7 +158,10 @@ vector<std::pair<LEAVE_TYPE, string> > reader(string& initial_sexpr)
 		  if(sexpr[i] == ')') braces_open--;
 		}while(braces_open>0);		  
 	    }
-	  list.push_back(std::pair<LEAVE_TYPE, string>(type, substring(sexpr.c_str(), pointer, i)));
+	  i++;
+	  string subst = substring(sexpr.c_str(), pointer, i);
+	  // printf("Pushing \"%s\" in-between [%d, %d]\n", subst.c_str(), pointer, i + 1);
+	  list.push_back(std::pair<LEAVE_TYPE, string>(type, subst));
 	  pointer = i;
 
 	  in_word = false;
