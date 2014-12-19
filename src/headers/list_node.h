@@ -9,7 +9,7 @@ public:
   list_node(const char* src);
   ~list_node() { }
 
-  const char* eval();
+  string eval();
 private:
   
 };

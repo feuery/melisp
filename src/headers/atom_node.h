@@ -9,7 +9,7 @@ class atom_node: public node
  atom_node(const char* source): node(ATOM), src(source) { }
 
   ~atom_node() { }
-  const char* eval();
+  string eval();
  private:
   const char* src;
 

@@ -9,7 +9,7 @@ class string_node: public node
  string_node(const char* string_literal): node(STRING), string_literal(string_literal) { }
   ~string_node() { }
 
-  const char* eval();
+  string eval();
  private:
   const char* string_literal;
 

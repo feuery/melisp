@@ -2,6 +2,9 @@
 #define NODE_H
 
 #include <LEAVE_TYPE.h>
+#include <string>
+
+using std::string;
 
 class node{
  public:
@@ -11,7 +14,7 @@ class node{
 
   LEAVE_TYPE type() { return _type; }
   
-  virtual const char* eval() = 0;
+  virtual string eval() = 0;
   
  private:
 

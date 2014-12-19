@@ -178,9 +178,6 @@ string to_string(vector<node*>& vec)
   string buffer;
   for(unsigned int i=0; i<vec.size(); i++)
     {
-      LEAVE_TYPE type = vec.at(i)->type();
-      buffer += leave_to_string(type);
-      buffer += " | ";
       buffer += vec.at(i)->eval();
       buffer += "\n";
     }

@@ -1,11 +1,13 @@
 #include <list_node.h>
 
+using std::string;
+
 list_node::list_node(const char* src): node(LIST)
 {
 
 }
 
-const char* list_node::eval()
+string list_node::eval()
 {
   return "TODO: implement list_node::eval()";
 }
